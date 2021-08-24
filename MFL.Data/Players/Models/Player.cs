@@ -1,9 +1,10 @@
-﻿using System;
+﻿using MFL.Data.SeedWork;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace MFL.Data.Models
 {
-    public class Player : IUpdatable
+    public class Player : IUpdatable, IIdentifiable
     {
         [Key]
         public int Id { get; set; }

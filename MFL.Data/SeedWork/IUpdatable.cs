@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MFL.Data.Models
+namespace MFL.Data.SeedWork
 {
     public interface IUpdatable
     {

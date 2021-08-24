@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MFL.Data;
 using MFL.Data.Models;
+using MFL.Services.Players;
+using MFL.Data.SeedWork;
 
 namespace MFL.Web.Controllers
 {
@@ -14,25 +11,27 @@ namespace MFL.Web.Controllers
     [ApiController]
     public class PlayersController : ControllerBase
     {
-        private readonly MFLContext _context;
+        private readonly PlayersService _playersService;
 
-        public PlayersController(MFLContext context)
+        public PlayersController(PlayersService playersService)
         {
-            _context = context;
+            _playersService = playersService;
         }
 
         // GET: api/Players
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Player>>> GetPlayers()
         {
-            return await _context.Players.ToListAsync();
+            var players = await _playersService.GetAll();
+
+            return Ok(players);
         }
 
         // GET: api/Players/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Player>> GetPlayer(int id)
         {
-            var player = await _context.Players.FindAsync(id);
+            var player = await _playersService.Get(id);
 
             if (player == null)
             {
@@ -47,27 +46,15 @@ namespace MFL.Web.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPlayer(int id, Player player)
         {
-            if (id != player.Id)
+            var status = await _playersService.Put(id, player);
+            
+            if (status == EntityStatus.UnmatchedId)
             {
                 return BadRequest();
             }
-
-            _context.Entry(player).State = EntityState.Modified;
-
-            try
+            else if (status == EntityStatus.EntityDoesntExist)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PlayerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound();
             }
 
             return NoContent();
@@ -78,31 +65,23 @@ namespace MFL.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<Player>> PostPlayer(Player player)
         {
-            _context.Players.Add(player);
-            await _context.SaveChangesAsync();
+            var result = await _playersService.Post(player);
 
-            return CreatedAtAction(nameof(GetPlayer), new { id = player.Id }, player);
+            return CreatedAtAction(nameof(GetPlayer), new { id = result.Id }, result);
         }
 
         // DELETE: api/Players/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePlayer(int id)
         {
-            var player = await _context.Players.FindAsync(id);
-            if (player == null)
+            var status = await _playersService.Delete(id);
+
+            if (status == EntityStatus.EntityDoesntExist)
             {
                 return NotFound();
             }
 
-            _context.Players.Remove(player);
-            await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool PlayerExists(int id)
-        {
-            return _context.Players.Any(e => e.Id == id);
         }
     }
 }
