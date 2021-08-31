@@ -1,20 +1,22 @@
 using MFL.Data;
 using MFL.Data.SeedWork;
+using MFL.Services.Clients;
 using MFL.Services.Players;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
+using System.Net.Http;
+using MFL.Services.Players.Profiles;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using MFL.Common.Config;
 
 namespace MFL.Web
 {
@@ -32,10 +34,51 @@ namespace MFL.Web
         {
             services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
+            var container = new CookieContainer();
+            services.AddSingleton(container);
+            services.AddHttpClient<IMFLHttpClient, MFLHttpClient>(client =>
+            {
+                client.BaseAddress = new Uri("https://api.myfantasyleague.com/");
+                client.DefaultRequestHeaders.Add("User-Agent", "DOTNETCOREMFL");
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+            {
+                CookieContainer = container,
+                UseCookies = true
+            });
+
+            services.AddAutoMapper(typeof(PlayersProfile));
+
             services.AddScoped<PlayersService>();
 
             services.AddControllers();
             services.AddDbContext<MFLContext>(opt => opt.UseInMemoryDatabase("mfl"));
+
+
+
+            var _appSettings = Configuration
+                .GetSection(AppSettingsOptions.AppSettings)
+                .Get<AppSettingsOptions>();
+            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(x =>
+                {
+                    x.RequireHttpsMetadata = false;
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MFL.Web", Version = "v1" });

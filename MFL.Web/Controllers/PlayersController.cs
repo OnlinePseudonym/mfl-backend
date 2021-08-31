@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using MFL.Data.Models;
+using MFL.Services.Players.Models;
 using MFL.Services.Players;
 using MFL.Data.SeedWork;
 
