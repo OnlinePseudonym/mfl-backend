@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MFL.Data.SeedWork
 {
-    public class Repository<TEntity> : IRepository<TEntity> where TEntity : class, IIdentifiable, new()
+    public class Repository<TEntity> : IRepository<TEntity> where TEntity : class, IEntity, new()
     {
         private readonly MFLContext _context;
 

@@ -1,11 +1,8 @@
-﻿using MFL.Data.Models;
+﻿using MFL.Data.Players.Entities;
 using MFL.Data.SeedWork;
+using MFL.Data.Users.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MFL.Data
 {
@@ -13,6 +10,11 @@ namespace MFL.Data
     {
         public MFLContext(DbContextOptions<MFLContext> options) : base(options)
         {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(MFLContext).Assembly);
         }
 
         public override int SaveChanges()
@@ -38,5 +40,6 @@ namespace MFL.Data
         }
 
         public DbSet<Player> Players { get; set; }
+        public DbSet<WaiverClaim> Claims { get; set; }
     }
 }

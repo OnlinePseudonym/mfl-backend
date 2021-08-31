@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace MFL.Data.SeedWork
 {
-    public interface IRepository<TEntity> where TEntity : class, IIdentifiable, new()
+    public interface IRepository<TEntity> where TEntity : class, IEntity, new()
     {
         Task<IEnumerable<TEntity>> GetAll();
         Task<TEntity> Get(int id);

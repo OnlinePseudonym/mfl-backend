@@ -1,6 +1,6 @@
 ﻿namespace MFL.Data.SeedWork
 {
-    public interface IIdentifiable
+    public interface IEntity
     {
         int Id { get; set; }
     }
